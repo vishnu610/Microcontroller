@@ -1,0 +1,237 @@
+#include <msp430.h> 
+
+int count=0;
+/**
+ * main.c
+ */
+int main(void)
+{
+    int i, CC1, CC2;
+
+    WDTCTL = WDTPW | WDTHOLD;	// stop watchdog timer
+	PM5CTL0 &= ~LOCKLPM5;
+
+
+	P3DIR |= BIT4|BIT3|BIT0|BIT1|BIT5|BIT2;      //LED A,B,C,E,G,CC1   0011 1111
+	P5DIR |= BIT1|BIT4|BIT3;                      //LED D,F,CC2       0001 1010
+
+	P4DIR = 0X09;              //set SW 1,2,7 as i/p (led is also set as i/p to turn it off)
+
+	 P4IES = ( P4IES |= BIT2|BIT1|BIT7);                          // P4.2,1,7 Hi/Low edge
+	 P4IE = (P4IE |= BIT2|BIT1|BIT7);                           // P4.2,1,7 interrupt enabled
+
+
+
+
+
+	  __bis_SR_register(GIE);                  //global interrupt enable
+
+  while(1)
+  {
+
+
+      CC2 = count & 0xf0;
+      CC2 = CC2 >>4;
+      CC1 = count & 0x0f;
+
+      P5OUT|=BIT3;      //cc2 set as o/p
+
+
+     switch(CC2)
+             {
+                 case(0):
+                         P3OUT=0X1B;
+                         P5OUT=0X12;
+
+
+                         break;
+
+                 case(1):
+                         P3OUT=0X09;
+                         P5OUT=0X00;
+
+
+                         break;
+
+                 case(2):
+                         P3OUT=0X3A;
+                         P5OUT=0X02;
+
+
+                         break;
+
+                 case(3):
+                         P3OUT=0X39;
+                         P5OUT=0X02;
+
+
+                         break;
+
+                 case(4):
+                         P3OUT=0X29;
+                         P5OUT=0X10;
+
+
+                         break;
+
+                 case(5):
+                         P3OUT=0X31;
+                         P5OUT=0X12;
+
+
+                         break;
+
+                 case(6):
+                         P3OUT=0X33;
+                         P5OUT=0X12;
+
+
+                         break;
+
+                 case(7):
+                         P3OUT=0X19;
+                         P5OUT=0X00;
+
+
+                         break;
+
+                 case(8):
+                         P3OUT=0X3B;
+                         P5OUT=0X12;
+
+
+                         break;
+
+                 case(9):
+                         P3OUT=0X39;
+                         P5OUT=0X12;
+
+
+                         break;
+
+                 }
+
+
+    for (i=0; i>50; i++);
+
+    P5OUT&=~BIT3;      //cc2 set as o/p
+
+     //
+
+
+
+     P3OUT|=BIT2;      //cc1 set as o/p
+
+             switch(CC1)
+                    {
+                        case(0):
+                                 P3OUT=0X1B;
+                                 P5OUT=0X12;
+
+
+                                 break;
+
+                        case(1):
+                                P3OUT=0X0A;
+                                P5OUT=0X00;
+
+
+                                break;
+
+                        case(2):
+                                P3OUT=0X32;
+                                P5OUT=0X12;
+
+
+                                break;
+
+                        case(3):
+                                P3OUT=0X3A;
+                                P5OUT=0X02;
+
+
+                                break;
+
+                        case(4):
+                               P3OUT=0X2B;
+                               P5OUT=0X00;
+
+
+                               break;
+
+                        case(5):
+                                P3OUT=0X39;
+                                P5OUT=0X02;
+
+
+                                break;
+
+                        case(6):
+                                 P3OUT=0X39;
+                                 P5OUT=0X12;
+
+
+                                 break;
+
+                        case(7):
+                                P3OUT=0X1A;
+                                P5OUT=0X00;
+
+
+                                break;
+
+                        case(8):
+                                P3OUT=0X3B;
+                                P5OUT=0X12;
+
+
+                                break;
+
+                        case(9):
+                                P3OUT=0X3B;
+                                P5OUT=0X02;
+
+
+                                break;
+
+                    }
+
+             for (i=0; i>50; i++);
+
+
+             P3OUT&=~BIT2;      //cc1 set as o/p
+
+  }
+
+}
+
+
+#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
+#pragma vector=PORT4_VECTOR
+__interrupt void Port_4(void)
+#elif defined(__GNUC__)
+void __attribute__ ((interrupt(PORT1_VECTOR))) Port_4 (void)
+#else
+#error Compiler not supported!
+#endif
+{
+   int CHECK;
+    P4IFG &= ~(BIT1|BIT2|BIT7);      //clear interrupt flag
+
+   count = count+1;
+   CHECK = count;
+   CHECK = CHECK & 0X0F;
+   if (CHECK == 0x0a)
+   {
+       count = count & 0xf0;
+       count = count + 0x10;
+       if (count > 0x99)
+       {
+           count = 0;
+       }
+
+   }
+
+       //}
+
+}
